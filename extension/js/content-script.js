@@ -3,8 +3,8 @@
 // "more" drop-down menu
 var MORE_MENU_ID = 'hdtb-more-mn';
 
-// discussions filter string
-var DISC_FILTER = ' ' + 'inurl:forum|viewthread|showthread|viewtopic|showtopic|"index.php?topic"' + 
+// new filter strings
+var DSC_FILTER = ' ' + 'inurl:forum|viewthread|showthread|viewtopic|showtopic|"index.php?topic"' + 
 	' | ' + 'intext:"reading this topic"|"next thread"|"next topic"|"send private message"' + 
 	' | ' + 'site:reddit.com/r/*/comments/' + 
 	' | ' + 'site:quora.com' + 
@@ -13,6 +13,21 @@ var DISC_FILTER = ' ' + 'inurl:forum|viewthread|showthread|viewtopic|showtopic|"
 	' | ' + 'site:mathoverflow.com/questions/' + 
 	' | ' + 'site:askubuntu.com/questions/' + 
 	' | ' + 'site:superuser.com/questions/';
+var BLG_FILTER = ' ' + 'inurl:blog';
+var RCP_FILTER = ' ' + 'inurl:recipe';
+
+function getFilter(url){
+	if (url == "tbm=dsc"){
+		return DSC_FILTER;
+	}
+	if (url == "tbm=blg"){
+		return BLG_FILTER;
+	}
+	if (url == "tbm=rcp"){
+		return RCP_FILTER;
+	}
+	return "";
+}
 
 
 // initalize the extension
@@ -28,7 +43,7 @@ var observer = new MutationObserver(function(mutations) {
 				}
 			});
 		}
-	});
+	});    
 });
 
 function init() {
@@ -54,8 +69,8 @@ function addMenuItem(menu, name, url){
 	if(document.location.href.lastIndexOf(url) === 
 			(document.location.href.length - url.length)){
 		return; // filter is already active
-	} else if(url == "tbm=dsc" && discussionActive()){
-		enableWebSearch();
+	} else if(filterActive(url)){
+		enableWebSearch(url);
 		return;
 	}
 	name = upCase(name);
@@ -64,9 +79,13 @@ function addMenuItem(menu, name, url){
 	var goTo = function(e){
 		e.preventDefault();
 		var href;
-		if(url == "tbm=dsc") { // discussions filter is no longer supported by Google
-			href = document.location.origin + '/search?q=' + getQuery() + DISC_FILTER;
-		} else {
+		if(url == "tbm=dsc") { // discussions filter no longer supported by Google
+			href = document.location.origin + '/search?q=' + getQuery() + DSC_FILTER;
+		} else if(url == "tbm=blg") { // blogs filter no longer supported by Google
+			href = document.location.origin + '/search?q=' + getQuery() + BLG_FILTER;
+		} else if(url == "tbm=rcp") { // recipes filter no longer supported by Google
+			href = document.location.origin + '/search?q=' + getQuery() + RCP_FILTER;
+		} else { // remaining filters should still be supported by Google
 			href = document.location.href.replace(/&tbm=.{3}/g, '') + '&' + url;
 		}
 		document.location.href = href; 
@@ -121,15 +140,17 @@ function upCase(str) {
 }
 
 /**
- * Detect if disucssions filter is currently active.
+ * Detect if a particular filter is currently active.
  */
-function discussionActive() {
-	var href = decodeURI(document.location.href);
-	var filter = DISC_FILTER.match(/\S+?\|/)[0]; // first filter is enough, othewise have to deal with various encodings
-	if(href.indexOf(filter) > -1 && href.indexOf('#q=') == -1) {
-		return true;
-	} else if(href.indexOf('#q=') > -1 && href.lastIndexOf(filter) > href.lastIndexOf('#q=')) {
-		return true;
+function filterActive(url) {
+	if (url == "tbm=dsc" || url == "tbm=blg" || url == "tbm=rcp"){
+		var href = decodeURI(document.location.href);
+		var filter = getFilter(url).match(/\S+?\|/)[0]; // first filter is enough, othewise have to deal with various encodings
+		if(href.indexOf(filter) > -1 && href.indexOf('#q=') == -1) {
+			return true;
+		} else if(href.indexOf('#q=') > -1 && href.lastIndexOf(filter) > href.lastIndexOf('#q=')) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -137,10 +158,10 @@ function discussionActive() {
 /**
  * Link "web" button to escape from filtered search.
  */
-function enableWebSearch(){
+function enableWebSearch(url){
 	try {
 		var button = document.querySelector('#hdtb-msb .hdtb-mitem');
-		var filter = DISC_FILTER.match(/\S+?\|/)[0];
+		var filter = getFilter(url).match(/\S+?\|/)[0];
 		var query = decodeURI(getQuery()).replace(new RegExp( '[ +]?' + filter.replace('|', '\\|') + '.+' ), '');
 		button.innerHTML = button.innerHTML.indexOf('<a') == -1 ? ('<a href="javascript:;">' + button.innerHTML + '</a>') : button.innerHTML;
 		button.classList.remove('hdtb-msel');
