@@ -4,8 +4,16 @@
 var MORE_MENU_ID = 'hdtb-more-mn';
 
 // discussions filter string
-var DISC_FILTER = ' inurl:forum|viewthread|showthread|viewtopic|showtopic|"index.php?topic" | ' + 
-	'intext:"reading this topic"|"next thread"|"next topic"|"send private message"'; 
+var DISC_FILTER = ' ' + 'inurl:forum|viewthread|showthread|viewtopic|showtopic|"index.php?topic"' + 
+	' | ' + 'intext:"reading this topic"|"next thread"|"next topic"|"send private message"' + 
+	' | ' + 'site:reddit.com/r/*/comments/' + 
+	' | ' + 'site:quora.com' + 
+	' | ' + 'site:stackexchange.com/questions/' + 
+	' | ' + 'site:stackoverflow.com/questions/' + 
+	' | ' + 'site:mathoverflow.com/questions/' + 
+	' | ' + 'site:askubuntu.com/questions/' + 
+	' | ' + 'site:superuser.com/questions/';
+
 
 // initalize the extension
 init();
